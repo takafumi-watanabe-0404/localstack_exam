@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LocalStack S3 ファイルアップロード</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 1000px;
+      margin: 50px auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      border-bottom: 3px solid #4CAF50;
+      padding-bottom: 10px;
+    }
+    .upload-section {
+      margin: 30px 0;
+      padding: 20px;
+      background: #f9f9f9;
+      border-radius: 5px;
+      border: 2px dashed #ddd;
+    }
+    .file-input {
+      padding: 10px;
+      margin: 10px 0;
+    }
+    .btn {
+      background-color: #4CAF50;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn:hover {
+      background-color: #45a049;
+    }
+    .btn-danger {
+      background-color: #f44336;
+      padding: 8px 16px;
+      font-size: 14px;
+    }
+    .btn-danger:hover {
+      background-color: #da190b;
+    }
+    .btn-download {
+      background-color: #2196F3;
+      padding: 8px 16px;
+      font-size: 14px;
+      margin-right: 10px;
+    }
+    .btn-download:hover {
+      background-color: #0b7dda;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background-color: #4CAF50;
+      color: white;
+    }
+    tr:hover {
+      background-color: #f5f5f5;
+    }
+    .alert {
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
+    .alert-success {
+      background-color: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+    }
+    .alert-error {
+      background-color: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+    }
+    .results {
+      background: #e8f5e9;
+      padding: 15px;
+      border-radius: 4px;
+      margin: 20px 0;
+      font-family: monospace;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📦 LocalStack S3 ファイル管理</h1>
+
+    <% if notice %>
+      <div class="alert alert-success"><%= notice %></div>
+    <% end %>
+
+    <% if alert %>
+      <div class="alert alert-error"><%= alert %></div>
+    <% end %>
+
+    <% if @results.any? %>
+      <div class="results">
+        <% @results.each do |result| %>
+          <div><%= result %></div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <div class="upload-section">
+      <h2>📤 ファイルをアップロード</h2>
+      <%= form_with url: s3_test_upload_path, multipart: true, method: :post do |f| %>
+        <%= f.file_field :file, class: 'file-input', accept: '*/*' %>
+        <%= f.submit 'アップロード', class: 'btn' %>
+      <% end %>
+    </div>
+
+    <h2>📁 保存されているファイル</h2>
+    
+    <% if @files.any? %>
+      <table>
+        <thead>
+          <tr>
+            <th>ファイル名</th>
+            <th>サイズ</th>
+            <th>更新日時</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @files.each do |file| %>
+            <tr>
+              <td><%= file[:key] %></td>
+              <td><%= number_to_human_size(file[:size]) %></td>
+              <td><%= file[:last_modified].strftime('%Y-%m-%d %H:%M:%S') %></td>
+              <td>
+                <%= link_to 'ダウンロード', s3_test_download_path(key: file[:key]), class: 'btn btn-download' %>
+                <%= button_to '削除', s3_test_delete_path(key: file[:key]), 
+                    method: :post, 
+                    form: { onsubmit: "return confirm('本当に削除しますか？')" },
+                    class: 'btn btn-danger' %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <div class="empty-state">
+        <p>📭 ファイルがありません</p>
+        <p>上のフォームからファイルをアップロードしてください</p>
+      </div>
+    <% end %>
+  </div>
+</body>
+</html>
